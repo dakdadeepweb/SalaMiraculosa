@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lançar Avaliação</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 30px;
+      margin-left: 220px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .aluno-avaliacao {
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .aluno-nome {
+      font-weight: bold;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Sidebar igual */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 220px;
+      height: 100vh;
+      background: #dc3545;
+      padding-top: 40px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 25px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <a href="frequencia.html">📅 Frequência</a>
+    <a href="registro.html">📝 Registro de Aulas</a>
+    <a href="avaliacao.html">📊 Avaliação</a>
+    <a href="fechamento.html">📦 Fechamento</a>
+    <a href="tarefas.html">✅ Tarefas</a>
+    <a href="plataformas.html">🌐 Plataformas</a>
+  </div>
+
+  <h1>Lançar Avaliação</h1>
+
+  <input type="text" id="nomeAvaliacao" placeholder="Nome da Avaliação">
+  <select id="tipoAvaliacao">
+    <option value="Prova">Prova</option>
+    <option value="Trabalho">Trabalho</option>
+    <option value="Oral">Oral</option>
+    <option value="Atividade">Atividade</option>
+  </select>
+  <input type="date" id="dataAvaliacao">
+
+  <div id="listaAlunosNotas"></div>
+
+  <button class="btn" onclick="salvarNotas()">Salvar Notas</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+      authDomain: "aula-miraculosa.firebaseapp.com",
+      databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com",
+      projectId: "aula-miraculosa",
+      storageBucket: "aula-miraculosa.firebasestorage.app",
+      messagingSenderId: "1067250456026",
+      appId: "1:1067250456026:web:632e43e793155444035ce3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const listaAlunosNotas = document.getElementById("listaAlunosNotas");
+    const materia = sessionStorage.getItem("materiaProfessor") || "SemMateria";
+    const notas = {};
+
+    // Carregar alunos
+    db.ref("Alunos").orderByKey().once("value").then(snapshot => {
+      snapshot.forEach(child => {
+        const nome = child.key;
+
+        const div = document.createElement("div");
+        div.className = "aluno-avaliacao";
+
+        const nomeDiv = document.createElement("div");
+        nomeDiv.className = "aluno-nome";
+        nomeDiv.textContent = nome;
+
+        const inputNota = document.createElement("input");
+        inputNota.type = "number";
+        inputNota.min = 0;
+        inputNota.max = 10;
+        inputNota.placeholder = "Nota";
+
+        inputNota.addEventListener("input", () => {
+          notas[nome] = parseFloat(inputNota.value);
+        });
+
+        div.appendChild(nomeDiv);
+        div.appendChild(inputNota);
+        listaAlunosNotas.appendChild(div);
+      });
+    });
+
+    function salvarNotas() {
+      const nomeAvaliacao = document.getElementById("nomeAvaliacao").value.trim();
+      const tipo = document.getElementById("tipoAvaliacao").value;
+      const data = document.getElementById("dataAvaliacao").value;
+
+      if (!nomeAvaliacao || !data) {
+        alert("Preencha o nome da avaliação e a data!");
+        return;
+      }
+
+      const dados = {
+        nome: nomeAvaliacao,
+        tipo,
+        data,
+        notas
+      };
+
+      db.ref("Avaliacoes/" + materia).push(dados).then(() => {
+        alert("Avaliação salva com sucesso!");
+      }).catch(err => {
+        alert("Erro ao salvar: " + err.message);
+      });
+    }
+  </script>
+</body>
+</html>

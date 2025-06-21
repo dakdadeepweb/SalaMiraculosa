@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Tarefas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 30px;
+      margin-left: 220px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .aluno {
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.3s;
+      z-index: 1000;
+    }
+
+    .popup.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    .popup-content h2 {
+      margin-top: 0;
+    }
+
+    .popup-content label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .popup-content input, .popup-content select, .popup-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .popup-content button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 220px;
+      height: 100vh;
+      background: #dc3545;
+      padding-top: 40px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 25px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <a href="frequencia.html">📅 Frequência</a>
+  <a href="registro.html">📝 Registro de Aulas</a>
+  <a href="avaliacao.html">📊 Avaliação</a>
+  <a href="fechamento.html">📦 Fechamento</a>
+  <a href="tarefas.html">✅ Tarefas</a>
+  <a href="plataformas.html">🌐 Plataformas</a>
+</div>
+
+<h1>Tarefas</h1>
+
+<button class="btn" onclick="abrirPopup()">Fazer Nova Tarefa</button>
+
+<div id="listaAlunos"></div>
+
+<!-- POPUP DE NOVA TAREFA -->
+<div id="popupTarefa" class="popup">
+  <div class="popup-content">
+    <h2>Nova Tarefa</h2>
+
+    <label for="nomeTarefa">Nome da Tarefa:</label>
+    <input type="text" id="nomeTarefa">
+
+    <label for="descricaoTarefa">Descrição:</label>
+    <textarea id="descricaoTarefa" rows="3"></textarea>
+
+    <label for="tipoTarefa">Tipo:</label>
+    <select id="tipoTarefa">
+      <option value="Pesquisa">Pesquisa</option>
+      <option value="Atividade">Atividade</option>
+    </select>
+
+    <label for="notaMaxima">Nota Máxima:</label>
+    <input type="number" id="notaMaxima" min="0" step="0.5">
+
+    <button onclick="salvarTarefa()">Lançar</button>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+    authDomain: "aula-miraculosa.firebaseapp.com",
+    databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com",
+    projectId: "aula-miraculosa",
+    storageBucket: "aula-miraculosa.firebasestorage.app",
+    messagingSenderId: "1067250456026",
+    appId: "1:1067250456026:web:632e43e793155444035ce3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const nomeProfessor = sessionStorage.getItem("nomeProfessor") || "";
+  const materia = sessionStorage.getItem("materiaProfessor") || "SemMateria";
+
+  function carregarAlunos() {
+    const lista = document.getElementById("listaAlunos");
+    lista.innerHTML = "";
+
+    db.ref("Alunos").once("value").then(snapshot => {
+      snapshot.forEach(child => {
+        const div = document.createElement("div");
+        div.className = "aluno";
+        div.textContent = child.key;
+        lista.appendChild(div);
+      });
+    });
+  }
+
+  function abrirPopup() {
+    document.getElementById("popupTarefa").classList.add("show");
+  }
+
+  function salvarTarefa() {
+    const nome = document.getElementById("nomeTarefa").value.trim();
+    const descricao = document.getElementById("descricaoTarefa").value.trim();
+    const tipo = document.getElementById("tipoTarefa").value;
+    const notaMaxima = parseFloat(document.getElementById("notaMaxima").value);
+
+    if (!nome || !descricao || isNaN(notaMaxima)) {
+      alert("Preencha todos os campos corretamente!");
+      return;
+    }
+
+    const tarefa = {
+      nome,
+      descricao,
+      tipo,
+      notaMaxima,
+      dataLancamento: new Date().toISOString()
+    };
+
+    db.ref("tarefas/" + materia).push(tarefa).then(() => {
+      alert("Tarefa lançada com sucesso!");
+      document.getElementById("popupTarefa").classList.remove("show");
+      document.getElementById("nomeTarefa").value = "";
+      document.getElementById("descricaoTarefa").value = "";
+      document.getElementById("notaMaxima").value = "";
+    });
+  }
+
+  carregarAlunos();
+</script>
+</body>
+</html>

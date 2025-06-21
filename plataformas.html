@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Plataformas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f5f7;
+      padding: 30px;
+      margin-left: 220px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .plataforma {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      flex: 1 1 calc(50% - 20px);
+      min-width: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s;
+    }
+
+    .plataforma:hover {
+      transform: scale(1.03);
+    }
+
+    .plataforma h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #007bff;
+    }
+
+    .plataforma p {
+      margin: 10px 0 0;
+      font-size: 16px;
+      color: #555;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 220px;
+      height: 100vh;
+      background: #dc3545;
+      padding-top: 40px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 25px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <a href="frequencia.html">📅 Frequência</a>
+  <a href="registro.html">📝 Registro de Aulas</a>
+  <a href="avaliacao.html">📊 Avaliação</a>
+  <a href="fechamento.html">📦 Fechamento</a>
+  <a href="tarefas.html">✅ Tarefas</a>
+  <a href="plataformas.html">🌐 Plataformas</a>
+</div>
+
+<h1>Plataformas Miraculosas</h1>
+
+<div class="grid">
+  <div class="plataforma">
+    <h2>LadyMath</h2>
+    <p>Matemática</p>
+  </div>
+  <div class="plataforma">
+    <h2>Leia Aus</h2>
+    <p>Simulação Multiverso</p>
+  </div>
+  <div class="plataforma">
+    <h2>Livro dos Kwamis</h2>
+    <p>Kwamitologia</p>
+  </div>
+  <div class="plataforma">
+    <h2>Em breve...</h2>
+    <p>Nova Plataforma</p>
+  </div>
+</div>
+
+</body>
+</html>

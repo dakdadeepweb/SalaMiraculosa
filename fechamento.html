@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fechamento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 30px;
+      margin-left: 220px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    thead th {
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-weight: bold;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.3s;
+      z-index: 1000;
+    }
+
+    .popup.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .popup-content p {
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 220px;
+      height: 100vh;
+      background: #dc3545;
+      padding-top: 40px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 25px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background: #c82333;
+    }
+
+    .requisitos {
+      margin-top: 10px;
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .requisito-item {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .requisito-item input[type="text"] {
+      flex: 2;
+    }
+
+    .requisito-item input[type="number"] {
+      width: 80px;
+    }
+
+    .requisito-item button {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <a href="frequencia.html">📅 Frequência</a>
+  <a href="registro.html">📝 Registro de Aulas</a>
+  <a href="avaliacao.html">📊 Avaliação</a>
+  <a href="fechamento.html">📦 Fechamento</a>
+  <a href="tarefas.html">✅ Tarefas</a>
+  <a href="plataformas.html">🌐 Plataformas</a>
+</div>
+
+<h1>Fechamento do Período</h1>
+
+<table id="tabelaFechamento">
+  <thead>
+    <tr>
+      <th>Nome do Aluno</th>
+      <th>Faltas</th>
+      <th>Adicionar Requisito</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<button class="btn" id="btnSalvar">Salvar Fechamento</button>
+<button class="btn btn-danger" id="btnEditar" style="display: none;">Editar Frequência</button>
+
+<!-- POPUP -->
+<div id="popup" class="popup">
+  <div class="popup-content">
+    <p>Tem certeza que deseja salvar?<br>Só será possível editar depois da autorização do seu ADMINISTRADOR: Jho</p>
+    <button class="btn" onclick="confirmarFechamento()">Sim</button>
+    <button class="btn btn-danger" onclick="popup.classList.remove('show')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+    authDomain: "aula-miraculosa.firebaseapp.com",
+    databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com",
+    projectId: "aula-miraculosa",
+    storageBucket: "aula-miraculosa.firebasestorage.app",
+    messagingSenderId: "1067250456026",
+    appId: "1:1067250456026:web:632e43e793155444035ce3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const tabelaBody = document.querySelector("#tabelaFechamento tbody");
+  const btnSalvar = document.getElementById("btnSalvar");
+  const btnEditar = document.getElementById("btnEditar");
+  const popup = document.getElementById("popup");
+
+  const nomeProfessor = sessionStorage.getItem("nomeProfessor") || "";
+  const materia = sessionStorage.getItem("materiaProfessor") || "SemMateria";
+
+  let bloqueado = false;
+
+  function carregarAlunos() {
+    db.ref("Fechamento/" + materia + "/bloqueado").once("value").then(snap => {
+      bloqueado = snap.val() === true;
+
+      if (bloqueado && nomeProfessor !== "Jho") {
+        btnSalvar.style.display = "none";
+      }
+
+      if (nomeProfessor === "Jho" && bloqueado) {
+        btnEditar.style.display = "inline-block";
+      }
+
+      db.ref("Alunos").once("value").then(snapshot => {
+        tabelaBody.innerHTML = "";
+        snapshot.forEach(child => {
+          const nome = child.key;
+
+          const tr = document.createElement("tr");
+          const tdNome = document.createElement("td");
+          tdNome.textContent = nome;
+
+          const tdFaltas = document.createElement("td");
+          const inputFaltas = document.createElement("input");
+          inputFaltas.type = "number";
+          inputFaltas.disabled = bloqueado;
+          tdFaltas.appendChild(inputFaltas);
+
+          const tdRequisito = document.createElement("td");
+          const divRequisitos = document.createElement("div");
+          divRequisitos.className = "requisitos";
+
+          const btnAdd = document.createElement("button");
+          btnAdd.className = "btn";
+          btnAdd.textContent = "Adicionar Requisito";
+          btnAdd.type = "button";
+          btnAdd.disabled = bloqueado;
+
+          btnAdd.addEventListener("click", () => {
+            const item = document.createElement("div");
+            item.className = "requisito-item";
+
+            const nomeReq = document.createElement("input");
+            nomeReq.type = "text";
+            nomeReq.placeholder = "Ex: Trabalho extra";
+            nomeReq.required = true;
+
+            const valor = document.createElement("input");
+            valor.type = "number";
+            valor.placeholder = "Nota";
+            valor.required = true;
+
+            const btnRemover = document.createElement("button");
+            btnRemover.textContent = "✕";
+            btnRemover.onclick = () => item.remove();
+
+            item.appendChild(nomeReq);
+            item.appendChild(valor);
+            item.appendChild(btnRemover);
+            divRequisitos.appendChild(item);
+          });
+
+          tdRequisito.appendChild(divRequisitos);
+          tdRequisito.appendChild(btnAdd);
+
+          tr.appendChild(tdNome);
+          tr.appendChild(tdFaltas);
+          tr.appendChild(tdRequisito);
+
+          tabelaBody.appendChild(tr);
+        });
+      });
+    });
+  }
+
+  function confirmarFechamento() {
+    const dados = {};
+    const linhas = tabelaBody.querySelectorAll("tr");
+
+    linhas.forEach(tr => {
+      const nome = tr.cells[0].textContent;
+      const faltas = tr.cells[1].querySelector("input").value;
+      const requisitoItems = tr.cells[2].querySelectorAll(".requisito-item");
+
+      const requisitos = [];
+      requisitoItems.forEach(item => {
+        const nomeReq = item.querySelector("input[type='text']").value.trim();
+        const valor = parseFloat(item.querySelector("input[type='number']").value);
+        if (nomeReq && !isNaN(valor)) {
+          requisitos.push({ nome: nomeReq, valor });
+        }
+      });
+
+      dados[nome] = {
+        faltas,
+        requisitos
+      };
+    });
+
+    const hoje = new Date().toISOString().split("T")[0];
+    db.ref("Fechamento/" + materia + "/" + hoje).set(dados);
+    db.ref("Fechamento/" + materia + "/bloqueado").set(true);
+    alert("Fechamento salvo!");
+    location.reload();
+  }
+
+  btnSalvar.addEventListener("click", () => popup.classList.add("show"));
+  btnEditar.addEventListener("click", () => {
+    db.ref("Fechamento/" + materia + "/bloqueado").set(false).then(() => {
+      alert("Edição liberada para os professores!");
+      location.reload();
+    });
+  });
+
+  carregarAlunos();
+</script>
+</body>
+</html>

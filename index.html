@@ -3,69 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <title>Login do Professor - House Miraculosa</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles/login-professor.css">
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
+
   <div class="container">
-    <h1>Login do Professor</h1>
-    <img id="avatarPreview" src="https://via.placeholder.com/120" class="avatar" alt="Avatar">
-    <input id="nomeLogin" type="text" placeholder="Nome do Professor">
-    <input id="senhaLogin" type="password" placeholder="Senha">
-    <button onclick="logar()">Entrar</button>
+    <h2>Login do Professor</h2>
+    
+    <div id="avatar-container">
+      <img id="avatar-professor" src="" alt="Avatar do Professor" style="display: none; border-radius: 50%; width: 120px; height: 120px; margin-bottom: 16px;">
+    </div>
+
+    <input type="text" id="nome" placeholder="Nome do Professor" oninput="buscarAvatar()">
+    <input type="password" id="senha" placeholder="Senha">
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
+
+  <!-- POPUP -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <p id="popup-message">Mensagem</p>
+      <button onclick="fecharPopup()">OK</button>
+    </div>
   </div>
 
   <script>
-    const firebaseConfig = {
-  apiKey: "AIzaSyA3sxrxKp0Bc6S_OGb4pWBN080yfe6T5Bc",
-  authDomain: "aulamiraculosa.firebaseapp.com",
-  databaseURL: "https://aulamiraculosa-default-rtdb.firebaseio.com",
-  projectId: "aulamiraculosa",
-  storageBucket: "aulamiraculosa.firebasestorage.app",
-  messagingSenderId: "550072926782",
-  appId: "1:550072926782:web:1f884d4eef514af178476f",
-  measurementId: "G-00LM6P674T"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+    authDomain: "aula-miraculosa.firebaseapp.com",
+    databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com",
+    projectId: "aula-miraculosa",
+    storageBucket: "aula-miraculosa.firebasestorage.app",
+    messagingSenderId: "1067250456026",
+    appId: "1:1067250456026:web:632e43e793155444035ce3"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database(app);
 
-    const nomeInput = document.getElementById("nomeLogin");
-    const avatar = document.getElementById("avatarPreview");
+  function buscarAvatar() {
+    const nome = document.getElementById("nome").value.trim();
+    const avatarEl = document.getElementById("avatar-professor");
 
-    nomeInput.addEventListener("input", () => {
-      const nome = nomeInput.value.trim();
-      if (nome) {
-        db.ref("Professor/" + nome).once("value", (snap) => {
-          if (snap.exists()) {
-            avatar.src = snap.val().Avatar;
-          } else {
-            avatar.src = "https://via.placeholder.com/120";
-          }
-        });
+    if (!nome) {
+      avatarEl.style.display = "none";
+      return;
+    }
+
+    db.ref("Professores/" + nome).once("value").then(snapshot => {
+      const dados = snapshot.val();
+      if (dados && dados.Avatar) {
+        avatarEl.src = dados.Avatar;
+        avatarEl.style.display = "block";
       } else {
-        avatar.src = "https://via.placeholder.com/120";
+        avatarEl.style.display = "none";
       }
     });
+  }
 
-    function logar() {
-      const nome = nomeInput.value.trim();
-      const senha = document.getElementById("senhaLogin").value.trim();
+  function fazerLogin() {
+    const nome = document.getElementById("nome").value.trim();
+    const senha = document.getElementById("senha").value;
 
-      db.ref("Professor/" + nome).once("value", (snap) => {
-        if (snap.exists()) {
-          if (snap.val().Senha === senha) {
-            localStorage.setItem("professor", nome);
-            window.location.href = "professor/inicio.html";
-          } else {
-            alert("Senha incorreta!");
-          }
-        } else {
-          alert("Professor não encontrado.");
-        }
-      });
+    db.ref("Professores/" + nome).once("value").then(snapshot => {
+      const dados = snapshot.val();
+
+      if (dados && dados.Senha === senha) {
+        sessionStorage.setItem("nomeProfessor", nome); // Chave do Firebase
+        sessionStorage.setItem("nomeExibicao", dados.Nome);
+        sessionStorage.setItem("materiaProfessor", dados.Matéria || "Não cadastrada");
+
+        mostrarPopup(`Bem-vindo(a), ${dados.Nome}!`, () => {
+          window.location.href = "homeprofessor.html";
+        });
+      } else {
+        mostrarPopup("Nome ou senha incorretos!");
+      }
+    }).catch(error => {
+      mostrarPopup("Erro ao conectar com o banco.");
+    });
+  }
+
+  function mostrarPopup(mensagem, callback = null) {
+    const popup = document.getElementById("popup");
+    const mensagemEl = document.getElementById("popup-message");
+
+    mensagemEl.textContent = mensagem;
+    popup.style.display = "flex";
+    popup.dataset.callback = callback ? "1" : "";
+    window._popupCallback = callback;
+  }
+
+  function fecharPopup() {
+    const popup = document.getElementById("popup");
+    popup.style.display = "none";
+    if (popup.dataset.callback === "1" && typeof window._popupCallback === "function") {
+      window._popupCallback();
     }
-  </script>
+    window._popupCallback = null;
+  }
+</script>
+
 </body>
 </html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Home do Professor - House Miraculosa</title>
+  <link rel="stylesheet" href="styles/home-professor.css">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <header class="cabecalho">
+    <h1>Bem-vindo(a), <span id="nome-prof">...</span></h1>
+    <p><strong>Matéria:</strong> <span id="materia-prof">...</span></p>
+    <p><strong>Turma:</strong> 1º Ano</p>
+  </header>
+
+  <main class="painel-opcoes">
+    <a href="diario.html" class="card">
+      <img src="img/diario.png" alt="Diário de Classe">
+      <h2>Diário de Classe</h2>
+    </a>
+
+    <a href="mural.html" class="card">
+      <img src="img/mural.png" alt="Mural de Avisos">
+      <h2>Mural de Avisos</h2>
+    </a>
+  </main>
+
+  <!-- Popup -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <p id="popup-message">Mensagem</p>
+      <button onclick="fecharPopup()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+      authDomain: "aula-miraculosa.firebaseapp.com",
+      databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com",
+      projectId: "aula-miraculosa",
+      storageBucket: "aula-miraculosa.firebasestorage.app",
+      messagingSenderId: "1067250456026",
+      appId: "1:1067250456026:web:632e43e793155444035ce3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const nomeChave = sessionStorage.getItem("nomeProfessor");
+
+    if (!nomeChave) {
+      mostrarPopup("Nenhum professor logado!", () => {
+        window.location.href = "login-professor.html";
+      });
+    } else {
+      db.ref("Professores/" + nomeChave).once("value").then(snapshot => {
+        const dados = snapshot.val();
+        if (dados) {
+          document.getElementById("nome-prof").textContent = dados.Nome || nomeChave;
+          document.getElementById("materia-prof").textContent = dados.Matéria || "Não cadastrada";
+        } else {
+          mostrarPopup("Professor não encontrado!", () => {
+            window.location.href = "login-professor.html";
+          });
+        }
+      });
+    }
+
+    function mostrarPopup(mensagem, callback = null) {
+      const popup = document.getElementById("popup");
+      const mensagemEl = document.getElementById("popup-message");
+
+      mensagemEl.textContent = mensagem;
+      popup.style.display = "flex";
+      popup.dataset.callback = callback ? "1" : "";
+      window._popupCallback = callback;
+    }
+
+    function fecharPopup() {
+      const popup = document.getElementById("popup");
+      popup.style.display = "none";
+      if (popup.dataset.callback === "1" && typeof window._popupCallback === "function") {
+        window._popupCallback();
+      }
+      window._popupCallback = null;
+    }
+  </script>
+</body>
+</html>

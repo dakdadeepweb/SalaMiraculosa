@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Aulas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 30px;
+      margin-left: 220px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      margin-right: 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+      z-index: 1000;
+    }
+
+    .popup.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .popup-content label {
+      display: block;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .popup-content input, .popup-content textarea, .popup-content select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+
+    .popup-content button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .popup-content button.fechar {
+      background-color: #dc3545;
+      margin-left: 10px;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 220px;
+      height: 100vh;
+      background: #dc3545;
+      padding-top: 40px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 25px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <a href="frequencia.html">📅 Frequência</a>
+    <a href="registro.html">📝 Registro de Aulas</a>
+    <a href="avaliacao.html">📊 Avaliação</a>
+    <a href="fechamento.html">📦 Fechamento</a>
+    <a href="tarefas.html">✅ Tarefas</a>
+    <a href="plataformas.html">🌐 Plataformas</a>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <h1>REGISTRO DE AULAS</h1>
+
+  <button class="btn" onclick="abrirPopup()">Realizar Novo Registro</button>
+  <button class="btn" onclick="alert('Essa função será ativada em breve!')">Visualizar Registros</button>
+
+  <!-- POPUP FORMULÁRIO -->
+  <div id="popupRegistro" class="popup">
+    <div class="popup-content">
+      <h2>Novo Registro de Aula</h2>
+
+      <label>Título da Aula:</label>
+      <input type="text" id="titulo">
+
+      <label>Material Utilizado:</label>
+      <select id="material">
+        <option value="Apostila">Apostila</option>
+        <option value="Slide">Slide</option>
+        <option value="Outro">Outro</option>
+      </select>
+
+      <label>Resumo da Aula:</label>
+      <textarea id="resumo" rows="4"></textarea>
+
+      <label>Data:</label>
+      <input type="date" id="data">
+
+      <button onclick="salvarRegistro()">Salvar</button>
+      <button class="fechar" onclick="fecharPopup()">Fechar</button>
+    </div>
+  </div>
+
+  <!-- FIREBASE -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+      authDomain: "aula-miraculosa.firebaseapp.com",
+      databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com",
+      projectId: "aula-miraculosa",
+      storageBucket: "aula-miraculosa.firebasestorage.app",
+      messagingSenderId: "1067250456026",
+      appId: "1:1067250456026:web:632e43e793155444035ce3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ABRIR/FECHAR POPUP
+    function abrirPopup() {
+      document.getElementById("popupRegistro").classList.add("show");
+    }
+
+    function fecharPopup() {
+      document.getElementById("popupRegistro").classList.remove("show");
+    }
+
+    function salvarRegistro() {
+      const titulo = document.getElementById("titulo").value.trim();
+      const material = document.getElementById("material").value;
+      const resumo = document.getElementById("resumo").value.trim();
+      const data = document.getElementById("data").value;
+
+      const materia = sessionStorage.getItem("materiaProfessor") || "SemMateria";
+
+      if (!titulo || !resumo || !data) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      const registro = {
+        titulo,
+        material,
+        resumo,
+        data
+      };
+
+      db.ref("Relatorio/" + materia).push(registro).then(() => {
+        fecharPopup();
+        alert("Registro salvo com sucesso!");
+      }).catch(err => {
+        alert("Erro ao salvar: " + err.message);
+      });
+    }
+  </script>
+
+</body>
+</html>

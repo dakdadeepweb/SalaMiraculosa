@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mural de Avisos - Leia Aus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: white;
+      padding: 30px;
+      color: #00bcd4;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    #btnNovo {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .mural {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .aviso {
+      border: 2px solid #00bcd4;
+      border-radius: 12px;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+
+    .aviso h3 {
+      margin: 0;
+      color: #00bcd4;
+    }
+
+    .aviso p {
+      color: #333;
+      margin: 8px 0 0;
+    }
+
+    .aviso .data {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup.show {
+      display: flex;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .popup-content h2 {
+      margin-top: 0;
+    }
+
+    .popup-content input, .popup-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .popup-content button {
+      padding: 10px 20px;
+      background: #00bcd4;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .popup-content .cancelar {
+      background: #dc3545;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Mural de Avisos</h1>
+<button id="btnNovo" onclick="abrirPopup()">+ Novo Aviso</button>
+
+<div class="mural" id="muralContainer"></div>
+
+<!-- Popup -->
+<div class="popup" id="popupAviso">
+  <div class="popup-content">
+    <h2>Novo Aviso</h2>
+    <input type="text" id="titulo" placeholder="Título do Aviso" />
+    <textarea id="mensagem" placeholder="Digite a mensagem..." rows="4"></textarea>
+    <div style="text-align:right;">
+      <button onclick="salvarAviso()">Salvar</button>
+      <button class="cancelar" onclick="fecharPopup()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCL2e1Zi-pzXQZ-02vQf6I8rYjbi5IzaRo",
+    databaseURL: "https://aula-miraculosa-default-rtdb.firebaseio.com"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const nomeUsuario = sessionStorage.getItem("nomeProfessor") || sessionStorage.getItem("nomeAluno") || "Visitante";
+
+  if (nomeUsuario === "Jho") {
+    document.getElementById("btnNovo").style.display = "block";
+  }
+
+  function carregarAvisos() {
+    const mural = document.getElementById("muralContainer");
+    mural.innerHTML = "";
+
+    db.ref("avisos").once("value").then(snapshot => {
+      snapshot.forEach(child => {
+        const aviso = child.val();
+
+        const div = document.createElement("div");
+        div.className = "aviso";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = aviso.titulo;
+
+        const p = document.createElement("p");
+        p.textContent = aviso.mensagem;
+
+        const data = document.createElement("div");
+        data.className = "data";
+        data.textContent = aviso.data || "";
+
+        div.appendChild(h3);
+        div.appendChild(p);
+        div.appendChild(data);
+
+        mural.prepend(div); // mais recente no topo
+      });
+    });
+  }
+
+  function abrirPopup() {
+    document.getElementById("popupAviso").classList.add("show");
+  }
+
+  function fecharPopup() {
+    document.getElementById("popupAviso").classList.remove("show");
+  }
+
+  function salvarAviso() {
+    const titulo = document.getElementById("titulo").value.trim();
+    const mensagem = document.getElementById("mensagem").value.trim();
+    if (!titulo || !mensagem) return;
+
+    const id = Date.now();
+    const data = new Date().toLocaleDateString("pt-BR");
+
+    db.ref("avisos/" + id).set({
+      titulo,
+      mensagem,
+      data
+    }).then(() => {
+      fecharPopup();
+      carregarAvisos();
+    });
+  }
+
+  carregarAvisos();
+</script>
+
+</body>
+</html>
