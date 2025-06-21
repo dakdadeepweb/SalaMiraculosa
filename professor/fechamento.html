@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fechamento - Sala do Futuro</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f0f0f0;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 180px;
+      background: white;
+      height: 100vh;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      padding: 20px 0;
+      position: fixed;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 12px 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background-color: #BBDEFB;
+    }
+
+    .main {
+      margin-left: 200px;
+      padding: 30px;
+      flex: 1;
+    }
+
+    h1 {
+      color: #D81B60;
+      font-size: 36px;
+    }
+
+    .mensagem {
+      background-color: white;
+      padding: 20px;
+      border-left: 5px solid #D81B60;
+      margin-bottom: 20px;
+      box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    }
+
+    button {
+      background-color: #1976D2;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    button:hover {
+      background-color: #0D47A1;
+    }
+
+    /* POPUP */
+    .popup-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .popup input, .popup select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    .popup h2 {
+      color: #1976D2;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3sxrxKp0Bc6S_OGb4pWBN080yfe6T5Bc",
+      authDomain: "aulamiraculosa.firebaseapp.com",
+      databaseURL: "https://aulamiraculosa-default-rtdb.firebaseio.com",
+      projectId: "aulamiraculosa",
+      storageBucket: "aulamiraculosa.firebasestorage.app",
+      messagingSenderId: "550072926782",
+      appId: "1:550072926782:web:1f884d4eef514af178476f",
+      measurementId: "G-00LM6P674T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const abrirPopup = () => {
+      document.getElementById("popup-bg").style.display = "flex";
+    };
+
+    const fecharPopup = () => {
+      document.getElementById("popup-bg").style.display = "none";
+    };
+
+    const salvarTrabalho = () => {
+      const nome = document.getElementById("nome").value.trim();
+      const tipo = document.getElementById("tipo").value;
+      const dataEntrega = document.getElementById("data").value;
+
+      if (!nome || !dataEntrega) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      set(ref(db, `trabalhos/${nome}`), {
+        tipo,
+        dataEntrega
+      }).then(() => {
+        alert("Trabalho salvo com sucesso!");
+        fecharPopup();
+        document.getElementById("nome").value = "";
+        document.getElementById("tipo").value = "Pesquisa";
+        document.getElementById("data").value = "";
+      });
+    };
+
+    window.abrirPopup = abrirPopup;
+    window.fecharPopup = fecharPopup;
+    window.salvarTrabalho = salvarTrabalho;
+  </script>
+</head>
+<body>
+
+  <div class="sidebar">
+    <a href="frequencia.html">Frequência</a>
+    <a href="fechamento.html">Fechamento</a>
+    <a href="registros.html">Registros</a>
+    <a href="tarefas.html">Tarefas</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+
+  <div class="main">
+    <h1>Fechamento</h1>
+    <div class="mensagem">
+      <p>Olá professor, não estamos nem na metade do Bimestre, mas você já pode adicionar os trabalhos que os alunos precisam fazer!</p>
+    </div>
+    <button onclick="abrirPopup()">➕ Adicionar Trabalho</button>
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup-bg" id="popup-bg">
+    <div class="popup">
+      <h2>Adicionar Trabalho</h2>
+      <input type="text" id="nome" placeholder="Nome do trabalho" />
+      <select id="tipo">
+        <option value="Pesquisa">Pesquisa</option>
+        <option value="Atividade">Atividade</option>
+        <option value="Desenho">Desenho</option>
+      </select>
+      <input type="date" id="data" />
+      <button onclick="salvarTrabalho()">Salvar</button>
+      <button style="background-color: gray; margin-top:10px;" onclick="fecharPopup()">Cancelar</button>
+    </div>
+  </div>
+
+</body>
+</html>

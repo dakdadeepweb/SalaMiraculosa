@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarefas - Sala do Futuro</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      background-color: #f0f0f0;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: white;
+      height: 100vh;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      padding: 20px 0;
+      position: fixed;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 12px 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background-color: #BBDEFB;
+    }
+
+    .main {
+      margin-left: 200px;
+      padding: 30px;
+      flex: 1;
+    }
+
+    .mensagem {
+      background-color: white;
+      padding: 30px;
+      border-left: 5px solid #1976D2;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      max-width: 600px;
+    }
+
+    h1 {
+      color: #D81B60;
+      font-size: 36px;
+    }
+
+    p {
+      font-size: 18px;
+      color: #333;
+    }
+  </style>
+
+  <script>
+    window.onload = () => {
+      // Pegando nome do professor do localStorage (caso esteja salvo lá)
+      const nome = localStorage.getItem("professor_nome") || "Professor";
+      document.getElementById("nome-professor").innerText = nome;
+    };
+  </script>
+</head>
+<body>
+
+  <div class="sidebar">
+    <a href="frequencia.html">Frequência</a>
+    <a href="fechamento.html">Fechamento</a>
+    <a href="registros.html">Registros</a>
+    <a href="tarefas.html">Tarefas</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+
+  <div class="main">
+    <h1>Tarefas</h1>
+    <div class="mensagem">
+      <p>Olá Professor, <strong id="nome-professor">...</strong>!</p>
+      <p>Como a <strong>plataforma do estudante</strong> ainda não está concluída, ainda não é possível criar tarefas por aqui.</p>
+      <p>Em breve, você poderá lançar atividades incríveis, pesquisas e até desafios temáticos com Kwamis, Miraculous e dinossauros se quiser! 🐞🦖</p>
+    </div>
+  </div>
+
+</body>
+</html>

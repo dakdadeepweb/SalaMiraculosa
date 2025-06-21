@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login do Professor - House Miraculosa</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Login do Professor</h1>
+    <img id="avatarPreview" src="https://via.placeholder.com/120" class="avatar" alt="Avatar">
+    <input id="nomeLogin" type="text" placeholder="Nome do Professor">
+    <input id="senhaLogin" type="password" placeholder="Senha">
+    <button onclick="logar()">Entrar</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyA3sxrxKp0Bc6S_OGb4pWBN080yfe6T5Bc",
+  authDomain: "aulamiraculosa.firebaseapp.com",
+  databaseURL: "https://aulamiraculosa-default-rtdb.firebaseio.com",
+  projectId: "aulamiraculosa",
+  storageBucket: "aulamiraculosa.firebasestorage.app",
+  messagingSenderId: "550072926782",
+  appId: "1:550072926782:web:1f884d4eef514af178476f",
+  measurementId: "G-00LM6P674T"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const nomeInput = document.getElementById("nomeLogin");
+    const avatar = document.getElementById("avatarPreview");
+
+    nomeInput.addEventListener("input", () => {
+      const nome = nomeInput.value.trim();
+      if (nome) {
+        db.ref("Professor/" + nome).once("value", (snap) => {
+          if (snap.exists()) {
+            avatar.src = snap.val().Avatar;
+          } else {
+            avatar.src = "https://via.placeholder.com/120";
+          }
+        });
+      } else {
+        avatar.src = "https://via.placeholder.com/120";
+      }
+    });
+
+    function logar() {
+      const nome = nomeInput.value.trim();
+      const senha = document.getElementById("senhaLogin").value.trim();
+
+      db.ref("Professor/" + nome).once("value", (snap) => {
+        if (snap.exists()) {
+          if (snap.val().Senha === senha) {
+            localStorage.setItem("professor", nome);
+            window.location.href = "professor/inicio.html";
+          } else {
+            alert("Senha incorreta!");
+          }
+        } else {
+          alert("Professor não encontrado.");
+        }
+      });
+    }
+  </script>
+</body>
+</html>

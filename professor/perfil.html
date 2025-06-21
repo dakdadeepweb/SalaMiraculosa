@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil do Professor</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background-color: #f0f0f0;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: white;
+      height: 100vh;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      padding: 20px 0;
+      position: fixed;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 12px 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background-color: #BBDEFB;
+    }
+
+    .main {
+      margin-left: 200px;
+      padding: 30px;
+      flex: 1;
+    }
+
+    .perfil {
+      background-color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+      margin-bottom: 30px;
+    }
+
+    .perfil img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #1976D2;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    button:hover {
+      background-color: #0D47A1;
+    }
+
+    .popup-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .popup input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    /* Cards da Agenda */
+    .agenda-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .card {
+      background-color: white;
+      padding: 15px;
+      border: 2px solid #64B5F6;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 180px;
+    }
+
+    .card h4 {
+      margin: 0;
+      color: #1976D2;
+    }
+
+    .card p {
+      font-size: 14px;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3sxrxKp0Bc6S_OGb4pWBN080yfe6T5Bc",
+      authDomain: "aulamiraculosa.firebaseapp.com",
+      databaseURL: "https://aulamiraculosa-default-rtdb.firebaseio.com",
+      projectId: "aulamiraculosa",
+      storageBucket: "aulamiraculosa.firebasestorage.app",
+      messagingSenderId: "550072926782",
+      appId: "1:550072926782:web:1f884d4eef514af178476f",
+      measurementId: "G-00LM6P674T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const professor = localStorage.getItem("professor_nome") || "Professor";
+
+    const carregarPerfil = () => {
+      const avatar = document.getElementById("avatar-img");
+
+      get(ref(db, `professores/${professor}`)).then(snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          avatar.src = data.avatar || "https://i.imgur.com/placeholder.png";
+        }
+      });
+    };
+
+    const abrirPopup = (tipo) => {
+      document.getElementById("popup-bg").style.display = "flex";
+      document.getElementById("form-tipo").value = tipo;
+      document.getElementById("form-label").innerText = tipo === "avatar" ? "Novo URL do Avatar:" : "Nova Senha:";
+    };
+
+    const fecharPopup = () => {
+      document.getElementById("popup-bg").style.display = "none";
+      document.getElementById("form-input").value = "";
+    };
+
+    const salvarAlteracao = () => {
+      const valor = document.getElementById("form-input").value.trim();
+      const tipo = document.getElementById("form-tipo").value;
+
+      if (!valor) {
+        alert("Campo vazio!");
+        return;
+      }
+
+      set(ref(db, `professores/${professor}/${tipo}`), valor).then(() => {
+        alert(`${tipo === "avatar" ? "Avatar" : "Senha"} atualizada!`);
+        if (tipo === "avatar") carregarPerfil();
+        fecharPopup();
+      });
+    };
+
+    const carregarAgendas = () => {
+      const container = document.getElementById("agendas");
+
+      onValue(ref(db, "agendas"), (snapshot) => {
+        container.innerHTML = "";
+        snapshot.forEach(child => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `<h4>${child.key}</h4><p>Agendamento salvo.</p>`;
+          container.appendChild(card);
+        });
+      });
+    };
+
+    window.onload = () => {
+      carregarPerfil();
+      carregarAgendas();
+      document.getElementById("professor-nome").innerText = professor;
+    };
+
+    window.abrirPopup = abrirPopup;
+    window.fecharPopup = fecharPopup;
+    window.salvarAlteracao = salvarAlteracao;
+  </script>
+</head>
+<body>
+
+  <div class="sidebar">
+    <a href="frequencia.html">Frequência</a>
+    <a href="fechamento.html">Fechamento</a>
+    <a href="registros.html">Registros</a>
+    <a href="tarefas.html">Tarefas</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+
+  <div class="main">
+    <div class="perfil">
+      <img id="avatar-img" src="https://i.imgur.com/placeholder.png" alt="Avatar do Professor" />
+      <h3 id="professor-nome">Professor</h3>
+      <button onclick="abrirPopup('avatar')">Editar Avatar</button>
+      <button onclick="abrirPopup('senha')">Mudar Senha</button>
+    </div>
+
+    <h2>Agendas</h2>
+    <div class="agenda-container" id="agendas"></div>
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup-bg" id="popup-bg">
+    <div class="popup">
+      <h3 id="form-label">...</h3>
+      <input type="text" id="form-input" placeholder="Digite aqui..." />
+      <input type="hidden" id="form-tipo" />
+      <button onclick="salvarAlteracao()">Salvar</button>
+      <button style="background-color: gray; margin-top: 10px;" onclick="fecharPopup()">Cancelar</button>
+    </div>
+  </div>
+
+</body>
+</html>

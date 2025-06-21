@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Início do Professor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #0099cc;
+      padding: 20px;
+      height: 100vh;
+      color: white;
+    }
+
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      margin: 15px 0;
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .boas-vindas {
+      color: #00bcd4;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .materia {
+      font-size: 18px;
+      color: #333;
+      margin-top: 5px;
+    }
+
+    .pergunta {
+      margin-top: 40px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>Menu</h2>
+    <a href="frequencia.html">Frequência</a>
+    <a href="fechamento.html">Fechamento</a>
+    <a href="registros.html">Registros</a>
+    <a href="tarefas.html">Tarefas</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+
+  <div class="main">
+    <img id="avatar" class="avatar" src="" alt="Avatar">
+    <div class="boas-vindas" id="saudacao">Bem-vindo(a)</div>
+    <div class="materia" id="materiaProfessor"></div>
+
+    <div class="pergunta">
+      Bem-vindo à home do professor, gostaria de fazer o que hoje?
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyA3sxrxKp0Bc6S_OGb4pWBN080yfe6T5Bc",
+  authDomain: "aulamiraculosa.firebaseapp.com",
+  databaseURL: "https://aulamiraculosa-default-rtdb.firebaseio.com",
+  projectId: "aulamiraculosa",
+  storageBucket: "aulamiraculosa.firebasestorage.app",
+  messagingSenderId: "550072926782",
+  appId: "1:550072926782:web:1f884d4eef514af178476f",
+  measurementId: "G-00LM6P674T"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const nomeProfessor = localStorage.getItem("professor");
+
+    if (!nomeProfessor) {
+      alert("Você precisa fazer login primeiro.");
+      window.location.href = "../Login-Professor.html";
+    } else {
+      db.ref("Professor/" + nomeProfessor).once("value", (snap) => {
+        const dados = snap.val();
+        document.getElementById("saudacao").innerText = `Bem-vindo(a), ${dados.Nome}`;
+        document.getElementById("materiaProfessor").innerText = `${dados.Materia}`;
+        document.getElementById("avatar").src = dados.Avatar;
+      });
+    }
+  </script>
+</body>
+</html>
